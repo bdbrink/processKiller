@@ -16,13 +16,14 @@ function getProcessList() {
     console.log('Running Processes:');
     console.log(stdout);
 
-    const unusedProcesses = findUnusedProcesses(stdout);
+    const excludeUsers = ['root', 'e143608']; // Add the users you want to exclude here
+    const unusedProcesses = findUnusedProcesses(stdout, excludeUsers);
     console.log('Unused Processes:');
     console.log(unusedProcesses);
   });
 }
 
-function findUnusedProcesses(psOutput) {
+function findUnusedProcesses(psOutput, excludeUsers) {
   const lines = psOutput.split('\n').slice(1); // Remove the header line
 
   const unusedProcesses = [];
@@ -30,7 +31,7 @@ function findUnusedProcesses(psOutput) {
     const [user, pid, cpu, mem, command] = line.trim().split(/\s+/);
 
     // Check conditions to consider a process as unused (you can modify these conditions as per your requirement)
-    const isUnused = cpu === '0.0' && mem === '0.0' && user !== 'root' && !command.includes('ps aux');
+    const isUnused = cpu === '0.0' && mem === '0.0' && !excludeUsers.includes(user) && !command.includes('ps aux');
     
     if (isUnused) {
       unusedProcesses.push({
