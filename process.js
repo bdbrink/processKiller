@@ -53,4 +53,28 @@ function findUnusedProcesses(psOutput, excludeUsers) {
   return unusedProcesses;
 }
 
+function killUnusedProcesses(processes, dryRun) {
+    console.log('Killing Processes:');
+    if (processes.length === 0) {
+      console.log('No unused processes to kill.');
+      return;
+    }
+  
+    if (dryRun) {
+      processes.forEach((process) => {
+        console.log(`(Dry Run) Killing PID ${process.pid}, Command: ${process.command}`);
+      });
+    } else {
+      processes.forEach((process) => {
+        exec(`kill ${process.pid}`, (error) => {
+          if (error) {
+            console.error(`Error killing PID ${process.pid}: ${error.message}`);
+            return;
+          }
+          console.log(`Killed PID ${process.pid}, Command: ${process.command}`);
+        });
+      });
+    }
+  }
+
 getProcessList();
