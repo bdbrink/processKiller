@@ -21,6 +21,9 @@ function getProcessList() {
     const unusedProcesses = findUnusedProcesses(stdout, excludeUsers);
     console.log("Unused Processes:");
     console.log(unusedProcesses);
+
+    // Kill the unused processes with dry run option (true/false)
+    killUnusedProcesses(unusedProcesses, true);
   });
 }
 
