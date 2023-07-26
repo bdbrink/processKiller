@@ -84,4 +84,23 @@ function killUnusedProcesses(processes, dryRun) {
     }
   }
 
+  function findMaliciousProcesses(psOutput, blacklist) {
+    const lines = psOutput.split('\n').slice(1);
+    const maliciousProcesses = [];
+  
+    for (const line of lines) {
+      const [command] = line.trim().split(/\s+/);
+  
+      // Check if the command matches any entry in the blacklist
+      for (const maliciousProcess of blacklist) {
+        if (command.includes(maliciousProcess)) {
+          maliciousProcesses.push(command);
+          break;
+        }
+      }
+    }
+  
+    return maliciousProcesses;
+  }
+
 getProcessList();
