@@ -1,16 +1,17 @@
 const { exec } = require("child_process");
 
 function getProcessList() {
-  const command = "ps aux";
+    console.time('Execution Time'); // Start the timer
+    const command = "ps aux";
 
-  exec(command, (error, stdout, stderr) => {
+    exec(command, (error, stdout, stderr) => {
     if (error) {
-      console.error(`Error: ${error.message}`);
-      return;
+        console.error(`Error: ${error.message}`);
+        return;
     }
     if (stderr) {
-      console.error(`Error: ${stderr}`);
-      return;
+        console.error(`Error: ${stderr}`);
+        return;
     }
 
     console.log("Running Processes:");
@@ -24,7 +25,10 @@ function getProcessList() {
 
     // Kill the unused processes with dry run option (true/false)
     killUnusedProcesses(unusedProcesses, true);
-  });
+    
+    // get time it takes to excute
+    console.timeEnd('Execution Time');
+    });
 }
 
 function findUnusedProcesses(psOutput, excludeUsers) {
