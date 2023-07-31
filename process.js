@@ -1,52 +1,54 @@
 const { exec } = require("child_process");
 
 function getProcessList() {
-    console.time('Execution Time'); // Start the timer
+  console.time("Execution Time"); // Start the timer
 
-    // Get the process name(s) from command-line arguments
-    const processNames = process.argv.slice(2);
+  // Get the process name(s) from command-line arguments
+  const processNames = process.argv.slice(2);
 
-    // Validate if process names are provided
-    if (processNames.length === 0) {
-        console.error("Please provide one or more process names as command-line arguments.");
-        return;
+  // Validate if process names are provided
+  if (processNames.length === 0) {
+    console.error(
+      "Please provide one or more process names as command-line arguments."
+    );
+    return;
+  }
+
+  const command = "ps aux";
+
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`Error: ${stderr}`);
+      return;
     }
 
-    const command = "ps aux";
+    console.log("Running Processes:");
+    console.log(stdout);
 
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            console.error(`Error: ${stderr}`);
-            return;
-        }
+    // Add the users you want to exclude here
+    const excludeUsers = ["root", "e143608"];
+    const unusedProcesses = findUnusedProcesses(stdout, excludeUsers);
+    console.log("Unused Processes:");
+    console.log(unusedProcesses);
 
-        console.log("Running Processes:");
-        console.log(stdout);
+    // Kill the unused processes with dry run option (true/false)
+    killUnusedProcesses(unusedProcesses, true);
 
-        // Add the users you want to exclude here
-        const excludeUsers = ["root", "e143608"];
-        const unusedProcesses = findUnusedProcesses(stdout, excludeUsers);
-        console.log("Unused Processes:");
-        console.log(unusedProcesses);
+    // Find malicious processes based on provided process names
+    const maliciousProcesses = findMaliciousProcesses(stdout, processNames);
+    console.log("Malicious Processes:");
+    console.log(maliciousProcesses);
 
-        // Kill the unused processes with dry run option (true/false)
-        killUnusedProcesses(unusedProcesses, true);
-        
-        // Find malicious processes based on provided process names
-        const maliciousProcesses = findMaliciousProcesses(stdout, processNames);
-        console.log("Malicious Processes:");
-        console.log(maliciousProcesses);
+    // Kill the malicious processes with dry run option (true/false)
+    //killMaliciousProcesses(maliciousProcesses, true);
 
-        // Kill the malicious processes with dry run option (true/false)
-        //killMaliciousProcesses(maliciousProcesses, true);
-        
-        // Get time it takes to execute
-        console.timeEnd('Execution Time');
-    });
+    // Get time it takes to execute
+    console.timeEnd("Execution Time");
+  });
 }
 
 function findUnusedProcesses(psOutput, excludeUsers) {
@@ -79,31 +81,33 @@ function findUnusedProcesses(psOutput, excludeUsers) {
 }
 
 function killUnusedProcesses(processes, dryRun) {
-    console.log('Killing Processes:');
-    if (processes.length === 0) {
-      console.log('No unused processes to kill.');
-      return;
-    }
-  
-    if (dryRun) {
-      processes.forEach((process) => {
-        console.log(`(Dry Run) Killing PID ${process.pid}, Command: ${process.command}`);
+  console.log("Killing Processes:");
+  if (processes.length === 0) {
+    console.log("No unused processes to kill.");
+    return;
+  }
+
+  if (dryRun) {
+    processes.forEach((process) => {
+      console.log(
+        `(Dry Run) Killing PID ${process.pid}, Command: ${process.command}`
+      );
+    });
+  } else {
+    processes.forEach((process) => {
+      exec(`kill ${process.pid}`, (error) => {
+        if (error) {
+          console.error(`Error killing PID ${process.pid}: ${error.message}`);
+          return;
+        }
+        console.log(`Killed PID ${process.pid}, Command: ${process.command}`);
       });
-    } else {
-      processes.forEach((process) => {
-        exec(`kill ${process.pid}`, (error) => {
-          if (error) {
-            console.error(`Error killing PID ${process.pid}: ${error.message}`);
-            return;
-          }
-          console.log(`Killed PID ${process.pid}, Command: ${process.command}`);
-        });
-      });
-    }
+    });
+  }
 }
 
 function findMaliciousProcesses(psOutput, blacklist) {
-  const lines = psOutput.split('\n').slice(1);
+  const lines = psOutput.split("\n").slice(1);
   const maliciousProcesses = [];
 
   for (const line of lines) {
@@ -122,27 +126,27 @@ function findMaliciousProcesses(psOutput, blacklist) {
 }
 
 function killMaliciousProcesses(processes, dryRun) {
-    console.log('Killing Malicious Processes:');
-    if (processes.length === 0) {
-        console.log('No malicious processes to kill.');
-        return;
-    }
+  console.log("Killing Malicious Processes:");
+  if (processes.length === 0) {
+    console.log("No malicious processes to kill.");
+    return;
+  }
 
-    if (dryRun) {
-        processes.forEach((process) => {
-            console.log(`(Dry Run) Killing Process: ${process}`);
-        });
-    } else {
-        processes.forEach((process) => {
-            exec(`pkill ${process}`, (error) => {
-                if (error) {
-                    console.error(`Error killing process ${process}: ${error.message}`);
-                    return;
-                }
-                console.log(`Killed Process: ${process}`);
-            });
-        });
-    }
+  if (dryRun) {
+    processes.forEach((process) => {
+      console.log(`(Dry Run) Killing Process: ${process}`);
+    });
+  } else {
+    processes.forEach((process) => {
+      exec(`pkill ${process}`, (error) => {
+        if (error) {
+          console.error(`Error killing process ${process}: ${error.message}`);
+          return;
+        }
+        console.log(`Killed Process: ${process}`);
+      });
+    });
+  }
 }
 
 getProcessList();
